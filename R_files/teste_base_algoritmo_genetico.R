@@ -22,6 +22,7 @@ Kd_max = 100
 
 # Biblioteca que contém invlap() - transformada inversa de laplace
 library(pracma)
+library(genalg)
 
 # Função que avalia o cromossomo
 # cromossomo = (P, I, D)
