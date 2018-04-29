@@ -6,8 +6,10 @@ wn = 1
 csi = 0.5
 
 # Configuracoes do algoritmo genetico
-geracoes = 100
-populacao = 50
+geracoes = 50
+populacao = 100
+mutacao = 0.06
+
 
 Kp_min = 0
 Kp_max = 100
@@ -18,7 +20,11 @@ Ki_max = 100
 Kd_min = 0
 Kd_max = 100
 
-tx_amostragem = 5000
+tx_amostragem = 1000
+
+#valores iniciais
+init = c(1,0.1,0.1)
+init_df = data.frame(init)
 
 #########################################
 
@@ -29,6 +35,7 @@ sistema = function(s) (alpha*(wn^2))/(s^2 + 2*csi*wn*s + wn^2)
 library(pracma)
 library(genalg)
 
+erro = 0
 # Funcao que avalia o cromossomo
 # cromossomo = (P, I, D)
 fitness = function(cromossomo) {
@@ -64,14 +71,14 @@ GAmodel = rbga(
   stringMin=c(Kp_min, Ki_min, Kd_min),
   # Valores maximos de cada componente do cromossomo
   stringMax=c(Kp_max, Ki_max, Kd_max),
-  # Cromossomo inicial (nulo = aleatório)
-  suggestions=NULL,
+  # Cromossomo inicial (nulo = aleatorio)
+  suggestions= init_df,
   # Tamanho da populaco
   popSize=populacao,
   # Quantidade de geracoes
   iters=geracoes,
   # Chance de mutacao ( padrao = 1/(size+1) )
-  mutationChance=0.06,
+  mutationChance=mutacao,
   # Quantidade da populacao que passa para a proxima geracao
   elitism=NA,
   # Função de monitoramento de cada geracao
@@ -99,12 +106,20 @@ pid = function(s) (bestKp + (bestKi/s) + bestKd*s)
 malha_fechada = function(s) (pid(s)*sistema(s))/(1 + pid(s)*sistema(s))
 resposta_degrau_unitario_f = function(s) (1/s)*malha_fechada(s)
 resposta_do_sistema_t = invlap(Fs=resposta_degrau_unitario_f, 0, 2*pi, tx_amostragem)
-plot(resposta_do_sistema_t, type="l")
-erro = 0
+plot(resposta_do_sistema_t, type="l", col = "red")
 
+x = resposta_do_sistema_t$x
+matplot(x, cbind(resposta_do_sistema_t$y,1-exp(-10*x)), type = "l", col = c("blue","red"))
+        
+
+
+erro = 0
 for (i in 1:(tx_amostragem-1)){
   y_desejado = (1-exp(-10*resposta_do_sistema_t$x[i]))
   erro = erro + (y_desejado-resposta_do_sistema_t$y[i])^2
 }
+
+
+
 cat("Erro quadr�tico:", erro, "\n")
 
