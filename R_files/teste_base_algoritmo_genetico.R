@@ -65,6 +65,32 @@ fitness = function(cromossomo) {
   return(erro)
 }
 
+# funcao de monitoramenteo, indica os melhores valores para pid em cada geracao indicada
+# monitor <- function(obj) {
+  # 
+  # if (obj$iter == 1) {
+  #   print(paste("GENERATION:", obj$iter))
+  #   print(obj$population[which.max(obj$evaluations), ])
+  # }
+  # if (obj$iter == 10) {
+  #   print(paste("GENERATION:", obj$iter))
+  #   print(obj$population[which.max(obj$evaluations), ])
+  # }
+  # if (obj$iter == 20) {
+  #   print(paste("GENERATION:", obj$iter))
+  #   print(obj$population[which.min(obj$evaluations), ])
+  # }
+  # if (obj$iter == 30) {
+  #   print(paste("GENERATION:", obj$iter))
+  #   print(obj$population[which.min(obj$evaluations), ])
+  # }
+  # if (obj$iter == 40) {
+  #   print(paste("GENERATION:", obj$iter))
+  #   print(obj$population[which.min(obj$evaluations), ])
+  # }
+  # 
+# }
+
 # Algoritmo genetico (https://www.rdocumentation.org/packages/genalg/versions/0.2.0/topics/rbga)
 GAmodel = rbga(
   # Valores máxnimos de cada componente do cromossomo
@@ -106,20 +132,16 @@ pid = function(s) (bestKp + (bestKi/s) + bestKd*s)
 malha_fechada = function(s) (pid(s)*sistema(s))/(1 + pid(s)*sistema(s))
 resposta_degrau_unitario_f = function(s) (1/s)*malha_fechada(s)
 resposta_do_sistema_t = invlap(Fs=resposta_degrau_unitario_f, 0, 2*pi, tx_amostragem)
-plot(resposta_do_sistema_t, type="l", col = "red")
 
 x = resposta_do_sistema_t$x
 matplot(x, cbind(resposta_do_sistema_t$y,1-exp(-10*x)), type = "l", col = c("blue","red"))
-        
-
+      
 
 erro = 0
 for (i in 1:(tx_amostragem-1)){
   y_desejado = (1-exp(-10*resposta_do_sistema_t$x[i]))
   erro = erro + (y_desejado-resposta_do_sistema_t$y[i])^2
 }
-
-
 
 cat("Erro quadrático:", erro, "\n")
 
