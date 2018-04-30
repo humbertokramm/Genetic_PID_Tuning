@@ -31,6 +31,8 @@ init_df = data.frame(init)
 # Modelo do sistema de segunda ordem
 sistema = function(s) (alpha*(wn^2))/(s^2 + 2*csi*wn*s + wn^2)
 
+#sistema = function(s) (2.091*exp(-7)*s^2+3.293*exp(-7)*s+4.06*exp(-5))/(s^2-1.78*s+0.78)
+
 # Biblioteca que contem invlap() - transformada inversa de laplace
 library(pracma)
 library(genalg)
