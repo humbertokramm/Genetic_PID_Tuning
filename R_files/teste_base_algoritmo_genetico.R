@@ -1,9 +1,17 @@
 ####### Configuracoes do programa #######
 
+alpha <- readline(prompt="Digite o Alpha: ")
+wn <- readline(prompt="Digite o wn: ")
+csi <- readline(prompt="Digite o csi: ")
+# converte character em double
+alpha <- as.double(alpha)
+wn <- as.double(wn)
+csi <- as.double(csi)
+
 # Modelo do sistema de segunda ordem (as variaveis importantes)
-alpha = 4
-wn = 1
-csi = 0.5
+#alpha = 4
+#wn = 1
+#csi = 0.5
 
 # Configuracoes do algoritmo genetico
 geracoes = 50
