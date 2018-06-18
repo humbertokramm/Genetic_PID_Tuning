@@ -1,17 +1,15 @@
 ####### Configuracoes do programa #######
 
-alpha <- readline(prompt="Digite o Alpha: ")
-wn <- readline(prompt="Digite o wn: ")
-csi <- readline(prompt="Digite o csi: ")
-# converte character em double
-alpha <- as.double(alpha)
-wn <- as.double(wn)
-csi <- as.double(csi)
 
-# Modelo do sistema de segunda ordem (as variaveis importantes)
-#alpha = 4
-#wn = 1
-#csi = 0.5
+# Cálculo para obter o modelo do sistema de segunda ordem
+
+
+# Cálculo para determinação do csi
+csi = sqrt((log(Mp)/pi)^2/(1+(log(Mp)/pi)^2))
+
+# Cálculo para determinação do wn
+wn = pi/(Tp*sqrt(1-csi^2))
+
 
 # Configuracoes do algoritmo genetico
 geracoes = 50
@@ -37,7 +35,7 @@ init_df = data.frame(init)
 #########################################
 
 # Modelo do sistema de segunda ordem
-sistema = function(s) (alpha*(wn^2))/(s^2 + 2*csi*wn*s + wn^2)
+sistema = function(s) ((wn^2))/(s^2 + 2*csi*wn*s + wn^2)
 #sistema = function(s) (14.48)/(0.000002439311*s^2 + 0.0161*s + 1)
 
 #sistema = function(s) (2.091*exp(-7)*s^2+3.293*exp(-7)*s+4.06*exp(-5))/(s^2-1.78*s+0.78)
