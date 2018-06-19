@@ -1,15 +1,36 @@
-####### Configuracoes do programa #######
+
+# Importa o csv com a resposta ao degrau
 
 
-# Cálculo para obter o modelo do sistema de segunda ordem
+
+RespostaDegrau <- read.csv(file="resposta.csv", header=TRUE, sep=",");
+
+# Determina o overshoot da resposta
+
+Mp = max(RespostaDegrau[1]);
+indexPico = match(Mp, unlist(RespostaDegrau[1]));
+Tp = RespostaDegrau[indexPico,2];
+Mp = Mp-1
+
+cat("Tp =",Tp,"\n")
+cat("Mp =", Mp,"\n")
 
 
 # Cálculo para determinação do csi
 csi = sqrt((log(Mp)/pi)^2/(1+(log(Mp)/pi)^2))
 
+cat("csi =",csi,"\n")
+
 # Cálculo para determinação do wn
 wn = pi/(Tp*sqrt(1-csi^2))
 
+cat("wn =", wn,"\n")
+
+# Determinacao do periodo de amostragem
+Ta = Tp*1.5
+
+# Determinacao da funcao de comparacao
+Tc = Tp*100
 
 # Configuracoes do algoritmo genetico
 geracoes = 50
@@ -26,7 +47,7 @@ Ki_max = 100
 Kd_min = 0
 Kd_max = 100
 
-tx_amostragem = 1000
+tx_amostragem = 5000
 
 #valores iniciais
 init = c(1,0.1,0.1)
@@ -36,9 +57,6 @@ init_df = data.frame(init)
 
 # Modelo do sistema de segunda ordem
 sistema = function(s) ((wn^2))/(s^2 + 2*csi*wn*s + wn^2)
-#sistema = function(s) (14.48)/(0.000002439311*s^2 + 0.0161*s + 1)
-
-#sistema = function(s) (2.091*exp(-7)*s^2+3.293*exp(-7)*s+4.06*exp(-5))/(s^2-1.78*s+0.78)
 
 # Biblioteca que contem invlap() - transformada inversa de laplace
 library(pracma)
@@ -63,42 +81,43 @@ fitness = function(cromossomo) {
   resposta_degrau_unitario_f = function(s) (1/s)*malha_fechada(s)
   
   # Resposta do sistema com controlador ao degrau unitÃ¡rio no dominio do tempo
-  resposta_do_sistema_t = invlap(resposta_degrau_unitario_f, 0, 2*pi, tx_amostragem)
+  resposta_do_sistema_t = invlap(resposta_degrau_unitario_f, 0, Ta, tx_amostragem)
   
   # A funcao de fitness retorna a soma do erro quadratico em relacao a uma exponencial (resposta utopica)
   erro = 0
   for (i in 1:(tx_amostragem-1)){
-    y_desejado = (1-exp(-10*resposta_do_sistema_t$x[i]))
+    y_desejado = (1-exp(-Tc*resposta_do_sistema_t$x[i]))
+    # y_desejado = 1
     erro = erro + (y_desejado-resposta_do_sistema_t$y[i])^2
   }
   return(erro)
 }
 
 # funcao de monitoramenteo, indica os melhores valores para pid em cada geracao indicada
-# monitor <- function(obj) {
-  # 
-  # if (obj$iter == 1) {
-  #   print(paste("GENERATION:", obj$iter))
-  #   print(obj$population[which.max(obj$evaluations), ])
-  # }
-  # if (obj$iter == 10) {
-  #   print(paste("GENERATION:", obj$iter))
-  #   print(obj$population[which.max(obj$evaluations), ])
-  # }
-  # if (obj$iter == 20) {
-  #   print(paste("GENERATION:", obj$iter))
-  #   print(obj$population[which.min(obj$evaluations), ])
-  # }
-  # if (obj$iter == 30) {
-  #   print(paste("GENERATION:", obj$iter))
-  #   print(obj$population[which.min(obj$evaluations), ])
-  # }
-  # if (obj$iter == 40) {
-  #   print(paste("GENERATION:", obj$iter))
-  #   print(obj$population[which.min(obj$evaluations), ])
-  # }
-  # 
-# }
+monitor <- function(obj) {
+
+if (obj$iter == 1) {
+  print(paste("GENERATION:", obj$iter))
+  print(obj$population[which.max(obj$evaluations), ])
+}
+if (obj$iter == 10) {
+  print(paste("GENERATION:", obj$iter))
+  print(obj$population[which.max(obj$evaluations), ])
+}
+if (obj$iter == 20) {
+  print(paste("GENERATION:", obj$iter))
+  print(obj$population[which.min(obj$evaluations), ])
+}
+if (obj$iter == 30) {
+  print(paste("GENERATION:", obj$iter))
+  print(obj$population[which.min(obj$evaluations), ])
+}
+if (obj$iter == 40) {
+  print(paste("GENERATION:", obj$iter))
+  print(obj$population[which.min(obj$evaluations), ])
+}
+
+}
 
 # Algoritmo genetico (https://www.rdocumentation.org/packages/genalg/versions/0.2.0/topics/rbga)
 GAmodel = rbga(
@@ -117,7 +136,7 @@ GAmodel = rbga(
   # Quantidade da populacao que passa para a proxima geracao
   elitism=NA,
   # FunÃ§Ã£o de monitoramento de cada geracao
-  monitorFunc=NULL,
+  monitorFunc=monitor,
   # Funcao de calculo de fitness
   evalFunc=fitness,
   # Mostra configuracoes
@@ -140,15 +159,16 @@ cat("Melhor Kd:", bestKd, "\n")
 pid = function(s) (bestKp + (bestKi/s) + bestKd*s)
 malha_fechada = function(s) (pid(s)*sistema(s))/(1 + pid(s)*sistema(s))
 resposta_degrau_unitario_f = function(s) (1/s)*malha_fechada(s)
-resposta_do_sistema_t = invlap(Fs=resposta_degrau_unitario_f, 0, 2*pi, tx_amostragem)
+resposta_do_sistema_t = invlap(Fs=resposta_degrau_unitario_f, 0, Ta, tx_amostragem)
 
 x = resposta_do_sistema_t$x
-matplot(x, cbind(resposta_do_sistema_t$y,1-exp(-10*x)), type = "l", col = c("blue","red"))
+matplot(x, cbind(resposta_do_sistema_t$y,1-exp(-Tc*x)), type = "l", col = c("blue","red"), ylim = c(0,1.3))
       
 
 erro = 0
 for (i in 1:(tx_amostragem-1)){
-  y_desejado = (1-exp(-10*resposta_do_sistema_t$x[i]))
+  y_desejado = (1-exp(-Tc*resposta_do_sistema_t$x[i]))
+  # y_desejado = 1
   erro = erro + (y_desejado-resposta_do_sistema_t$y[i])^2
 }
 
