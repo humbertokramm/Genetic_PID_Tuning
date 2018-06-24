@@ -1,9 +1,6 @@
-
 # Importa o csv com a resposta ao degrau
 
-
-
-RespostaDegrau <- read.csv(file="resposta.csv", header=TRUE, sep=",");
+RespostaDegrau <- read.csv(file="resposta2.csv", header=TRUE, sep=",");
 
 # Determina o overshoot da resposta
 
@@ -27,7 +24,7 @@ wn = pi/(Tp*sqrt(1-csi^2))
 cat("wn =", wn,"\n")
 
 # Determinacao do periodo de amostragem
-Ta = Tp*1.5
+Ta = Tp
 
 # Determinacao da funcao de comparacao
 Tc = Tp*100
